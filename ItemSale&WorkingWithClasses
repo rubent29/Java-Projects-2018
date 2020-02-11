@@ -1,0 +1,109 @@
+/*
+Author: Ruben Torrico
+Date: 9/28/18
+Program: Item and Sale
+Description: Creates classes to print items sold, price, quantity, and sales total
+ */
+package ch9;
+    public class ItemApp {
+    public static void main(String[] args) {   
+        Item lamp = new Item("Lamp", 2.45, "Night stand Lamp", 24.99);
+        Item tv = new Item("LED TV", 14.5, "50\" LED Television", 599.90);
+        Item table = new Item("Coffee Table", 35.00, "Coffee Table Concrete & Glass", 159.00);
+        Item candle = new Item("Scented Candle", 1.5, "Lavendar Oaks Farm Candle", 29.99);
+        Item xbox = new Item("Xbox One", 5.3, "Gaming Console", 299.99);
+        Item watch = new Item("Rolex", 2.5, "Expensive Watch", 10000.00);
+        
+        Sale firstSale = new Sale(lamp, 2, "10/27/2018", "MaryS.");
+        Sale secondSale = new Sale(table, 1, "10/27/2018", "Joe D.");
+        Sale thirdSale = new Sale(candle, 34, "10/27/2018", "CBKOutlet");
+        Sale fourthSale = new Sale(xbox, 2, "10/27/2018", "Lebronzo");
+        Sale fifthSale = new Sale(watch, 1, "10/27/2018", "Stefon Diggs");
+        Sale sixthSale = new Sale(tv, 40, "10/27/2018", "Costco");
+        
+        Customer firstPurchases = new Customer("Costco" , lamp, 24.99);
+        Customer secondPurchases = new Customer("Diggs", xbox, 299.99);
+        Customer thirdPurchases = new Customer("Wall", candle, 29.99);
+        
+        
+        System.out.println(firstSale.describeSale());
+        System.out.println(secondSale.describeSale());
+        System.out.println(thirdSale.describeSale());
+        System.out.println(fourthSale.describeSale());
+        System.out.println(fifthSale.describeSale());
+        System.out.println(sixthSale.describeSale());
+        
+        System.out.println(firstPurchases.purchase());
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+/*
+Author: Ruben Torrico
+Date: 9/28/18
+Program: Item and Sale
+Description: Creates classes to print items sold, price, quantity, and sales total
+ */
+package ch9;
+    public class Sale {
+    
+    private Item itemSold; 
+    public int quantity;
+    public String date;
+    public String customer;
+    
+   
+    public Sale(Item itemGone, int saleQuantity,String saleDate, String saleCustomer)              
+    {
+        this.itemSold = itemGone;          
+        this.quantity =  saleQuantity;
+        this.date = saleDate;
+        this.customer = saleCustomer;
+
+    }
+    public String describeSale(){
+        String print = " ";
+        System.out.print("Item Sold: " + itemSold.itemName + ", Price: $" + itemSold.getPrice() + ", Quantity: " + 
+                quantity + ", Sales Total: $" + (itemSold.getPrice() * quantity));
+        
+        return print;
+  
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////   
+
+    /*
+Author: Ruben Torrico
+Date: 9/28/18
+Program: Item and Sale
+Description: Creates classes to print items sold, price, quantity, and sales total
+ */
+package ch9;
+    public class Item {
+    public String itemName; 
+    public double weight;
+    public String description;
+    private double price;
+   
+    public Item(String saleName, double itemWeight, String itemDescrip, double salePrice)
+    {
+        this.itemName = saleName;
+        this.weight = itemWeight;
+        this.description = itemDescrip;
+        this.price = salePrice; 
+    }
+    
+    
+     public double getPrice()
+        {
+        return price;
+        }
+    
+    public double setPrice(double newPrice){
+        price = newPrice;
+        return price;    
+    }
+
+}
