@@ -2,7 +2,7 @@
 Author: Ruben Torrico
 Date: 9/8/18
 Program: Student Grade Simulation
-Description: Simulating random grades for students 
+Description:  Simulating random grades for students 
 and calculating averages for each student and homework assignment
 */
 package ch4and5;
