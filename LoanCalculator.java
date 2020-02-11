@@ -2,7 +2,7 @@
 Author: Ruben Torrico
 Date: 9/8/18
 Program: Loan Calculator
-Description: Calculating interest and princple after a payment 
+Description: Calculating interest and principle after a payment 
 */
 //package ch2;
 import java.util.Scanner;
