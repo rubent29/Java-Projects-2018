@@ -1,0 +1,278 @@
+Description: Simulating random grades for students and storing them into a database
+
+package fall2018;
+
+import javafx.application.Application;
+import javafx.event.*;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import javafx.stage.Stage;
+import javafx.collections.*;
+import javafx.scene.shape.*;
+import java.sql.*;
+import oracle.jdbc.pool.*;
+import java.text.DecimalFormat;
+
+import java.util.*;
+	
+public class FxGradeSimulator extends Application {
+    DecimalFormat df = new DecimalFormat("#.00");
+	
+    Label name = new Label("Name: ");
+    Label gradeLevel = new Label("Grade Level: ");
+    Label gpa = new Label("GPA: ");
+    
+    TextField txtName = new TextField();
+    TextField txtGradeLevel = new TextField();
+    TextField txtGpa = new TextField();
+
+    Button btnCreateStudent = new Button("Create Student ->");
+    Button btnSimulateGrade = new Button("Simulate Grades");
+    
+    ToggleGroup btnGroup = new ToggleGroup();
+   
+    TextArea txtOutput = new TextArea();
+    ComboBox combo = new ComboBox();
+    String tableName = "STUDENTS";
+    
+    Connection dbConn;
+    Statement commStmt;
+    ResultSet dbResults;
+    
+    ArrayList <FxStudent> studentArray = new ArrayList<FxStudent>(100);
+    
+    @Override
+    public void start(Stage primaryStage) {
+        //loads all students in the database but having trouble with looping through array
+        loadStudentsFromDB();
+        
+        // We will use three GridPane to layout our UI Form
+        GridPane primaryPane = new GridPane();
+        GridPane tablePane = new GridPane();
+        GridPane overallPane = new GridPane();
+
+        ObservableList obsStudentList = FXCollections.observableArrayList();
+        
+        for (int i = 0; i < studentArray.size(); i++)
+        {
+                obsStudentList.add(studentArray.get(i).getID()
+                + ": " + studentArray.get(i).getName());
+        }
+        
+        ComboBox combo = new ComboBox(obsStudentList);
+        
+        ObservableList outputHistory = FXCollections.observableArrayList();
+        ListView lstHistory = new ListView(outputHistory);
+        
+        // Adding controls to our controls GridPane
+        primaryPane.setAlignment(Pos.CENTER);
+        btnSimulateGrade.setAlignment(Pos.BASELINE_CENTER);
+        primaryPane.add(name, 0, 0);
+        primaryPane.add(gradeLevel, 0, 1);
+        primaryPane.add(gpa, 0, 2);
+        
+        primaryPane.add(txtName, 1, 0);
+        primaryPane.add(txtGradeLevel, 1, 1);
+        primaryPane.add(txtGpa, 1, 2);
+        primaryPane.add(txtOutput, 2, 3);
+
+        //controlsPane.add(rdoDisplayChart, 0, 7);
+        primaryPane.add(btnCreateStudent, 1, 4);
+        primaryPane.add(combo,1, 6);
+        
+        txtOutput.setMaxWidth(400);
+        
+        // Place the output on its own pane.
+        tablePane.setAlignment(Pos.BOTTOM_CENTER);
+        tablePane.add(btnSimulateGrade, 2,0);
+        tablePane.add(txtOutput, 2, 1);
+        
+        // Add the controls GridPane and output 
+        // GridPane to the overall GridPane
+        overallPane.setAlignment(Pos.CENTER);
+        overallPane.add(primaryPane, 0, 0);
+        overallPane.add(tablePane, 1, 0);
+        
+        // Set up the primary window and have it display
+        Scene primaryScene = new Scene(overallPane,800,800);
+        primaryStage.setTitle("Student Simulation 2.0");
+        primaryStage.setScene(primaryScene);
+        primaryStage.show();
+       
+        // We will be adding lambda expressions here.
+        btnCreateStudent.setOnAction(e -> {
+                     
+            String name = txtName.getText();
+            int gradeLevel = new Integer(txtGradeLevel.getText());
+            double gpa = new Double(txtGpa.getText());
+
+            FxStudent tempStudent = new FxStudent(name, gradeLevel, gpa);
+            studentArray.add(tempStudent);
+
+            obsStudentList.add(tempStudent.getID() + ": " + tempStudent.getName());  
+    
+            txtName.clear();
+            txtGradeLevel.clear();
+            txtGpa.clear();
+
+        }); // end of btnCommand's Event Handler
+        
+        combo.setOnAction(f -> {
+            int studentSelected = combo.getSelectionModel().getSelectedIndex();
+            txtOutput.appendText(studentArray.get(studentSelected).toString() + "\n");
+         
+        });
+        
+        btnSimulateGrade.setOnAction(e -> {
+        double randNum1 = 0;
+        double randNum2 = 0;
+        double randNum3 = 0;
+
+        int studentSelected = combo.getSelectionModel().getSelectedIndex();
+        String hwHeader = ("================================= " +"\n Name \t HW1\t HW2\t HW3" + "\n================================= ");
+        
+        txtOutput.setText(hwHeader);
+        
+        for(int i = 0; i < studentArray.size(); i++){
+        randNum1 = ((double)(Math.random() * (100 - 30) + 30 ));
+        randNum2 = ((double)(Math.random() * (100 - 30) + 30 ));
+        randNum3 = ((double)(Math.random() * (100 - 30) + 30 ));
+        
+        txtOutput.appendText("\n" + studentArray.get(i).getName() + 
+                            "\t" + df.format(randNum1) +  "\t"  +
+                            df.format(randNum2) + "\t" + df.format(randNum3) + "\n" );
+        }
+    });
+        
+    }
+  
+    @Override
+    public void stop(){
+        
+        for (int i = 0; i < studentArray.size(); i++){
+        String sqlQuery = "INSERT INTO JAVAUSER." + tableName + " (ID,NAME,GRADELEVEL,GPA) VALUES (";
+        sqlQuery += studentArray.get(i).getID() + ",";
+        sqlQuery += "\'" + studentArray.get(i).getName() + "\',";
+        sqlQuery += studentArray.get(i).getGradeLevel() + ",";
+        sqlQuery += studentArray.get(i).getGpa() + ")";
+        
+        sendDBCommand(sqlQuery);
+        }
+    }
+    public void loadStudentsFromDB(){
+      {
+        String sqlQuery = "SELECT * FROM JAVAUSER." + tableName;
+        
+        sendDBCommand(sqlQuery);
+        
+        try
+        {
+            while (dbResults.next())
+            {
+                // Clear out the TextArea's previous contents
+                txtOutput.clear();
+             
+                int ID = dbResults.getInt(1);
+                String name = dbResults.getString(2);
+                int gradeLevel = dbResults.getInt(3); 
+                double Gpa = dbResults.getDouble(4);
+                
+                studentArray.add(new FxStudent(ID, name,gradeLevel, Gpa));
+          
+            }
+        }
+        catch (SQLException sqle)
+        {
+            txtOutput.setText(sqle.toString());
+        }
+      }
+    }
+        public void sendDBCommand(String sqlQuery){
+         String URL = "jdbc:oracle:thin:@localhost:1521:XE";
+        String userID = "javauser"; // Change to YOUR Oracle username
+        String userPASS = "javapass"; // Change to YOUR Oracle password
+        OracleDataSource ds;
+        
+        System.out.println(sqlQuery);
+     
+        try
+        {
+            
+            ds = new OracleDataSource();
+           
+            ds.setURL(URL);
+           
+            dbConn = ds.getConnection(userID,userPASS);
+       
+            commStmt = dbConn.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
+          
+            dbResults = commStmt.executeQuery(sqlQuery); 
+           
+        }
+        catch (SQLException e)
+        {
+            System.out.println(e.toString());
+        }
+    }
+    public static void main(String[] args) {
+        launch(args);
+    }
+} // end of Class
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Student Class:
+
+package fall2018;
+
+public class FxStudent {
+    private int ID;
+    private String name;
+    private double gpa;
+    private int gradeLevel;
+    private static int nextID = 0;
+ 
+    public FxStudent(String name, int gradeLevel, double gpa){
+        this.name = name;
+        this.gradeLevel = gradeLevel;
+        this.gpa = gpa;
+        
+    }
+
+    public FxStudent(int ID, String name, int gradeLevel, double gpa){
+        this.ID = nextID;
+        nextID++;
+        this.name = name;
+        this.gradeLevel = gradeLevel;
+        this.gpa = gpa;
+        
+    }
+    
+    public int getID(){
+        return (this.ID);
+    }
+    public String getName(){
+        return (name);
+    }
+    public int getGradeLevel(){
+        return (gradeLevel);
+    }
+    public double getGpa(){
+        return (gpa);
+    }
+    public void setName(String newName){
+        name = newName;
+    }
+    public void setGradeLevel(int newGradeLevel){
+        gradeLevel = newGradeLevel;
+    }
+    public void setGpa(double newGpa){
+        gpa = newGpa;  
+    }
+    
+    public String toString(){
+        return ("ID: " + ID + ", Name: " + name + ", Grade: " + gradeLevel + ", GPA: " + gpa);
+    }
+
+}
